@@ -18,7 +18,7 @@ class GmailSpider(scrapy.Spider):
 	name = "gmail_sender"
 
 	start_urls = (
-					'https://www.google.com',
+					'http://gmail.com/',
 					)
 
 	def start_requests(self):
@@ -28,5 +28,3 @@ class GmailSpider(scrapy.Spider):
 	def parse(self, response):
 		print "##############"
 		print response.url
-
-		

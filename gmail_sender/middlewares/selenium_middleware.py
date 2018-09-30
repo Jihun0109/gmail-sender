@@ -1,4 +1,3 @@
-from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.common.exceptions import TimeoutException
 
@@ -11,6 +10,13 @@ import os
 import urllib
 from operator import itemgetter
 from datetime import datetime
+
+from selenium import webdriver
+from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as ec
+
 
 class SeleniumMiddleware(object):
 
@@ -32,7 +38,6 @@ class SeleniumMiddleware(object):
 ###########################################################
 
     def spider_opened(self, spider):
-        print "STARTTTTTTTTTTTTTTTTTTTTTTTTT"
         try:
             self.d = init_driver("chromedriver.exe")
         except TimeoutException:
@@ -48,20 +53,20 @@ class SeleniumMiddleware(object):
 ###########################################################
     
     def process_request(self, request, spider):
-        print "#############################################"
-        print "#############################################"
-        print "#### Received url request from scrapy #######"
-        print "#############################################"
-        print "#############################################"
-        print request.url
         if request.meta['use_selenium'] == True:
-        #print request.meta
-            #self.d = init_driver("")
-            
             try:
                 self.d.get(request.url)
+                self.d.maximize_window()
             except TimeoutException as e:            
                 print "Timeout Exception."
+
+            if spider.name == "gmail_sender":
+                # Opend login window
+                compose_elem = self.login_google("zz@gmail.com","zz")
+                if compose_elem:
+                    print "Login Successed!!"
+                else:
+                    print "Login Failed."
 
             resp = TextResponse(url=self.d.current_url,
                                 body=self.d.page_source,
@@ -69,6 +74,30 @@ class SeleniumMiddleware(object):
             resp.request = request.copy()
             #self.d.quit()
             return resp
+
+    def login_google(self, email, password):
+        email_edit  = self.d.find_element_by_xpath('//*[@type="email"]')
+        next_id_button = self.d.find_element_by_xpath('//*[@id="identifierNext"]')
+        if email_edit and next_id_button:
+            email_edit.click()
+            email_edit.send_keys(email)
+            next_id_button.click()
+
+            pw_elem = WebDriverWait(self.d, 30).until(ec.visibility_of_element_located((By.XPATH, '//*[@type="password"][not(@id)]')))
+            pw_elem.click()
+            pw_elem.send_keys(password)
+            next_pw_button = self.d.find_element_by_xpath('//*[@id="passwordNext"]')
+            next_pw_button.click()
+
+            print "Wait ..."
+            try:
+                compose_elem = WebDriverWait(self.d, 40).until(ec.visibility_of_element_located((By.XPATH, '//*[contains(text(),"Compose")]')))
+            except TimeoutException:
+                print "Timed out waiting for page to load."
+                return None
+            else:
+                return compose_elem
+
 
 ###########################################################
 ###########################################################
