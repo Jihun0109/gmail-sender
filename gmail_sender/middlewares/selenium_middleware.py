@@ -58,25 +58,30 @@ class SeleniumMiddleware(object):
             try:
                 self.d.get(request.url)
                 self.d.maximize_window()
-            except TimeoutException as e:            
+            except TimeoutException as e:
                 print "Timeout Exception."
 
             if spider.name == "gmail_sender":
                 # Opend login window
-                compose_elem = self.login_google("creative1230109@gmail.com","fmdfkehd1231320109")
+                compose_elem = self.login_google("b@gmail.com","bb")
                 if compose_elem == None:
                     print "Login Failed."
                 else:
                     print "Login Successed!!"
 
-                    if self.open_compose(compose_elem):
-                        self.write_receiver_addresses(["sdf@hotmail.com"])
-                        self.write_subject("Hello.")
-                        self.write_content("This is test email.")
-                        send_button_elem = self.d.find_element_by_xpath('//*[@aria-label="Send ‪(Ctrl-Enter)‬"]')
-                        send_button_elem.click()
-                        print "Send emails...."
-                        time.sleep(30)
+                    email_list = ["x@hotmail.com","y@hotmail.com","z@gmail.com","zz@gmail.com"];
+
+                    for email in email_list:
+                        if self.open_compose(compose_elem):
+                            self.write_receiver_addresses([email])
+                            self.write_subject("Hello.")
+                            self.write_content("This is test email.")
+                            send_button_elem = self.d.find_element_by_xpath('//*[@aria-label="Send ‪(Ctrl-Enter)‬"]')
+                            send_button_elem.click()
+                            print "Send emails...."
+                            time.sleep(5)
+                        else:
+                            break
 
 
             resp = TextResponse(url=self.d.current_url,
@@ -92,22 +97,40 @@ class SeleniumMiddleware(object):
         to_input.click()
         to_input.send_keys(string_to_write)
         print "Wrote email addresses"
-        time.sleep(10)
+        time.sleep(1)
 
     def write_subject(self, subject):
         to_input = self.d.find_element_by_xpath('//form[@enctype]//input[@name="subjectbox"]')
         to_input.click()
         to_input.send_keys(subject)
         print "Wrote subject content."
-        time.sleep(10)
+        time.sleep(1)
 
     def write_content(self, content):
         to_input = self.d.find_element_by_xpath('//div[@aria-label="Message Body"]')
         #to_input.click()
         #to_input.send_keys(content)
-        
-        query = 'arguments[0].appendChild(document.createElement("div").appendChild(document.createTextNode("Hi")));'        
-        self.d.execute_script(query,to_input)
+
+        queries = []
+
+        queries.append('arguments[0].appendChild(document.createElement("div").appendChild(document.createTextNode("{}")));'.format("Hello"))
+        queries.append('arguments[0].appendChild(document.createElement("div").appendChild(document.createElement("br")));')
+        queries.append('arguments[0].appendChild(document.createElement("div").appendChild(document.createTextNode("{}")));'.format("This is a test mail"))
+        queries.append('arguments[0].appendChild(document.createElement("div").appendChild(document.createElement("br")));')
+        queries.append('arguments[0].appendChild(document.createElement("div").appendChild(document.createTextNode("{}")));'.format("How can send link? now testing"))
+        queries.append('arguments[0].appendChild(document.createElement("div").appendChild(document.createElement("br")));')
+        # https://ibb.co/gojPOe
+        #queries.append('arguments[0].appendChild(document.createElement("div").appendChild(document.createElement("a")));')
+
+        url = "http://bit.ly/2R86tbS"
+        for i, query in enumerate(queries):
+            print i+1, " >> " ,query
+            self.d.execute_script(query,to_input)
+
+        # img_input = self.d.find_element_by_xpath('//div[@aria-label="Message Body"]//a')
+        # self.d.execute_script('arguments[0].href = "https://beautisong.page.link/6SuK";',img_input);
+        # self.d.execute_script('arguments[0].innerText = "Click";',img_input);
+
         print "Wrote content."
         time.sleep(10)
 
